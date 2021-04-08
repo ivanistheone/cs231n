@@ -21,13 +21,12 @@ def svm_loss_naive(W, X, y, reg):
     - loss as single float
     - gradient with respect to weights W; an array of same shape as W
     """
-    dW = np.zeros(W.shape) # initialize the gradient as zero
+    dW = np.zeros(W.shape) # 3073 x 10 zeros
 
     # compute the loss and the gradient
     num_classes = W.shape[1]
     num_train = X.shape[0]
     loss = 0.0
-    dW = np.zeros(W.shape)  # 3073 x 10
 
     for i in range(num_train):
         scores = X[i].dot(W)
@@ -76,8 +75,7 @@ def svm_loss_vectorized(W, X, y, reg):
 
     Inputs and outputs are the same as svm_loss_naive.
     """
-    loss = 0.0
-    dW = np.zeros(W.shape) # initialize the gradient as zero
+    num_train = X.shape[0]
 
     #############################################################################
     # TODO:                                                                     #
@@ -86,7 +84,23 @@ def svm_loss_vectorized(W, X, y, reg):
     #############################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-    pass
+    S = X.dot(W)  # scores (N,C)
+    # build mask selecting only the correct classes (one-hot encodig of y_i)
+    mask = np.eye(W.shape[1], dtype=bool)[y] 
+
+    # correct scores which we'll be subtracting from all other
+    correct_scores_vec = np.sum(np.where(mask, S, 0), axis=1)
+    correct_scores = correct_scores_vec[:,np.newaxis]   # broadcasting-ready vec
+
+    # compute margins
+    M = S - correct_scores + 1    # margins   (N,C)
+    M[mask] = 0
+    pM = np.where(M>0, M, 0)      # positive marings
+
+    # compute loss
+    loss = 1.0/num_train * np.sum(pM)   +   reg * np.sum(W * W)
+    #             maring conributions   +   regularization
+
 
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
@@ -101,7 +115,20 @@ def svm_loss_vectorized(W, X, y, reg):
     #############################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-    pass
+    # We'll use dpM to store two contributions that tells us which rows of X we
+    # should to include in the calculation of dW = X.T.dot(dpM)
+    dpM = np.zeros((X.shape[0], W.shape[1]))   # N x C zeros
+
+    # first contributoin (all active margins for others)
+    pMactive = np.where(M>0, 1, 0)
+    dpM += pMactive
+
+    # second contributoin subtract fro self self sum of others active
+    dpM[mask] = -1*np.sum(pMactive, axis=1)
+
+    # gadiaent
+    dW = 1.0/num_train * X.T.dot(dpM)   +   2*W
+
 
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
