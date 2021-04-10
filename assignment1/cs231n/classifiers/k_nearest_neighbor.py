@@ -137,21 +137,14 @@ class KNearestNeighbor(object):
         #########################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-        # print('X.shape', X.shape)
         XSQ = np.sum(np.square(X), axis=1)[:, np.newaxis]
-        # print('XSQ.shape', XSQ.shape)
-
-        Y = self.X_train
-        # print('Y.T.shape', Y.T.shape)
+        Y = self.X_train  # rename X_train as Y for shorter formulas
         YSQ = np.sum(np.square(Y), axis=1)[np.newaxis,:]
-        # print('YSQ.shape', YSQ.shape)
-
         dists = np.sqrt(XSQ + YSQ - 2*X.dot(Y.T))
-
 
         # This is also correct, but makes computer melt down....
         # XX = X[:,:,np.newaxis]
-        # dists = np.sqrt(np.sum(np.square(XX - self.X_train.T), axis=1))
+        # dists = np.sqrt(np.sum(np.square(XX - Y.T), axis=1))
 
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
         return dists
