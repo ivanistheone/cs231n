@@ -71,8 +71,7 @@ def softmax_loss_vectorized(W, X, y, reg):
     Inputs and outputs are the same as softmax_loss_naive.
     """
     # Initialize the loss and gradient to zero.
-    loss = 0.0
-    dW = np.zeros_like(W)
+    num_train = X.shape[0]
 
     #############################################################################
     # TODO: Compute the softmax loss and its gradient using no explicit loops.  #
@@ -83,8 +82,20 @@ def softmax_loss_vectorized(W, X, y, reg):
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
     # build mask selecting only the correct classes (one-hot encodig of y_i)
-    mask = np.eye(W.shape[1], dtype=bool)[y] 
+    mask = np.eye(W.shape[1], dtype=bool)[y]
 
+    S = X.dot(W)
+    S -= np.max(S, axis=1)[:,np.newaxis]
+    ES = np.exp(S)
+    P = ES / np.sum(ES, axis=1)[:,np.newaxis]
+
+    # compute loss
+    loss = -1.0/num_train*np.sum(np.log(P[mask]))   +   reg * np.sum(W * W)
+    #        -1/N            sum log(prob of y_i)   +   regularization part
+
+    # gadiaent
+    ones_yi = mask.astype(float)
+    dW = 1.0/num_train * X.T.dot(P - ones_yi)    +   2*W
 
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
