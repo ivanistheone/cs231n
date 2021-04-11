@@ -70,6 +70,7 @@ class TwoLayerNet(object):
         W1, b1 = self.params['W1'], self.params['b1']
         W2, b2 = self.params['W2'], self.params['b2']
         N, D = X.shape
+        H, C = W2.shape
 
         # Compute the forward pass
         scores = None
@@ -80,16 +81,18 @@ class TwoLayerNet(object):
         #############################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-        pass
+        mask = np.eye(C, dtype=bool)[y]   # one-hot encoding of labels y
+        A = X.dot(W1) + b1                # inputs to ReLU
+        H = np.maximum(A, 0)              # outputs of ReLU
+        S = H.dot(W2) + b2                # scores
 
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
         # If the targets are not given then jump out, we're done
         if y is None:
-            return scores
+            return S  # a.k.a scores
 
         # Compute the loss
-        loss = None
         #############################################################################
         # TODO: Finish the forward pass, and compute the loss. This should include  #
         # both the data loss and L2 regularization for W1 and W2. Store the result  #
@@ -98,7 +101,13 @@ class TwoLayerNet(object):
         #############################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-        pass
+        S -= np.max(S, axis=1)[:,np.newaxis]
+        P = np.exp(S) / np.sum(np.exp(S), axis=1)[:,np.newaxis]
+        loss = -1.0/N * np.sum(np.log(P[mask]))
+        loss += reg * np.sum(W1 * W1)
+        loss += reg * np.sum(b1 * b1)
+        loss += reg * np.sum(W2 * W2)
+        loss += reg * np.sum(b2 * b2)
 
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
@@ -111,7 +120,18 @@ class TwoLayerNet(object):
         #############################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-        pass
+        ones_yi = mask.astype(float)      # N x C
+        dS = P - ones_yi                  # N x C   gradients dL/ds for each xi
+
+        # Working backward through the computational graph in four steps...
+        grads['b2'] = 1.0/N * np.sum(dS, axis=0) + reg*2*b2
+        grads['W2'] = 1.0/N * H.T.dot(dS) + reg*2*W2
+
+        dH = dS.dot(W2.T)
+        dA = np.where(A>0, dH, 0)
+
+        grads['b1'] = 1.0/N * np.sum(dA, axis=0) + reg*2*b1
+        grads['W1'] = 1.0/N * X.T.dot(dA) + reg*2*W1
 
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
