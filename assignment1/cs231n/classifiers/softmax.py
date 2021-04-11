@@ -95,7 +95,7 @@ def softmax_loss_vectorized(W, X, y, reg):
 
     # gadiaent
     ones_yi = mask.astype(float)
-    dW = 1.0/num_train * X.T.dot(P - ones_yi)    +   2*W
+    dW = 1.0/num_train * X.T.dot(P - ones_yi)    +   reg * 2*W
 
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
