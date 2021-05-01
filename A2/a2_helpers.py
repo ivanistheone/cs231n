@@ -23,7 +23,7 @@ def get_toy_data(
     hidden_size=10,
     num_classes=3,
     dtype=torch.float32,
-    device='cuda'):
+    device='cpu'):
   """
   Get toy data for use when developing a two-layer-net.
 
